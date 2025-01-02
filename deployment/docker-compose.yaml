@@ -1,0 +1,26 @@
+name: sdp-project
+
+services:
+  # SDP SERVER
+  server:
+    build:
+      context: ../app
+      dockerfile: Dockerfile
+    ports:
+      - "9999:9999"
+    volumes:
+      - ../app:/app
+    depends_on:
+      - redis
+
+  # REDIS
+  redis:
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: always
+
+volumes:
+  redis-data:
