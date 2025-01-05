@@ -4,11 +4,13 @@ import asyncio
 import tornado
 import aioredis
 from controller.room import RoomHandler
+from controller.connect import ConnectHandler
 
 def make_app(redis):
     return tornado.web.Application(
         [
             (r"/room", RoomHandler, dict(redis=redis)),
+            (r"/connect", ConnectHandler, dict(redis=redis)),
         ],
         None,
         None,
