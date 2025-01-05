@@ -8,7 +8,7 @@ def view_request(request : Dict) -> Dict:
     return {"name": name}
 
 def view_response(response : Dict) -> Dict:
-    websocketUrl = response.get("webSocketURL")
-    if websocketUrl is None:
+    roomID = response.get("roomID")
+    if roomID is None:
         raise ValueError("webSocketURL is required")
-    return {"webSocketURL": websocketUrl}
+    return {"roomID": roomID}

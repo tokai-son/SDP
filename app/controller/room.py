@@ -54,7 +54,7 @@ class RoomHandler(tornado.web.RequestHandler):
 
         # View response
         try:
-            res = view_response({"webSocketURL": f"ws://localhost:9999/room/{roomID}"})
+            res = view_response({"roomID": roomID})
         except ValueError as e:
             logging.error(str(e))
             self.set_status(500)
