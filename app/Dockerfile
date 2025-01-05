@@ -8,6 +8,7 @@ COPY . /app
 
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir tornado
+RUN pip install --no-cache-dir aioredis
 
 # Make port 9999 available to the world outside this container
 EXPOSE 9999
