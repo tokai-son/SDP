@@ -9,6 +9,16 @@ class RoomHandler(tornado.web.RequestHandler):
     def initialize(self, redis: aioredis.Redis):
         self.redis = redis
 
+    def set_default_headers(self):
+        self.set_header("Access-Control-Allow-Origin", "http://localhost:3000")
+        self.set_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.set_header("Access-Control-Allow-Headers", "Content-Type")
+
+    def options(self):
+        # CORS preflight request
+        self.set_status(204)
+        self.finish()
+
     async def post(self):
         logging.info("POST /room started")
 
