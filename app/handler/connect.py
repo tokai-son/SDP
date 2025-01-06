@@ -8,6 +8,10 @@ class ConnectHandler(tornado.websocket.WebSocketHandler):
         self.redis = redis
         self.room_id = None
 
+    def check_origin(self, origin: str) -> bool:
+        allowed_origins = ["http://localhost:3000"]
+        return origin in allowed_origins
+
     async def async_open(self):
         # roomID from query parameter
         self.room_id = self.get_argument("roomID", None)
