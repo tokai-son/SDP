@@ -10,16 +10,16 @@ class ConnectHandler(tornado.websocket.WebSocketHandler):
 
     async def async_open(self):
         # roomID from query parameter
-        room_id = self.get_argument("roomID", None)
-        if not room_id:
+        self.room_id = self.get_argument("roomID", None)
+        if not self.room_id:
             self.write_message("roomIDが必要です")
             self.close()
             return
-        self.room_id = room_id
 
         # check if the roomID exists
         value = await self.redis.get(self.room_id)
         if not value:
+            self.room_id = None
             self.write_message("配信が存在しません")
             self.close()
             return

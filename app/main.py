@@ -4,7 +4,7 @@ import asyncio
 import tornado
 import aioredis
 from controller.room import RoomHandler
-from controller.connect import ConnectHandler
+from handler.connect import ConnectHandler
 
 def make_app(redis):
     return tornado.web.Application(
