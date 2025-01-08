@@ -28,6 +28,10 @@ class ConnectHandler(tornado.websocket.WebSocketHandler):
             self.close()
             return
 
+        if self.room_id not in connections:
+            connections[self.room_id] = set()
+        connections[self.room_id].add(self)
+
         logging.info(f"Connected to room: {self.room_id}")
 
     def open(self):
@@ -40,4 +44,14 @@ class ConnectHandler(tornado.websocket.WebSocketHandler):
         logging.info(f"Received: {self.room_id} message: {message}")
 
     def on_close(self):
+        if self.room_id and self in connections.get(self.room_id, set()):
+            connections[self.room_id].remove(self)
+            if not connections[self.room_id]:
+                del connections[self.room_id]
         logging.info(f"Disconnected from room: {self.room_id}")
+
+    @classmethod
+    def send_message_to_room(cls, room_id, message):
+        if room_id in connections:
+            for connection in connections[room_id]:
+                connection.write_message(message)
