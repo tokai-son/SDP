@@ -3,7 +3,7 @@ import logging
 import tornado.web
 import tornado.websocket
 import aioredis
-from view.ws.message import MessageType, unmarshal_message
+from view.ws.message import Message, MessageType, MessageFromType, unmarshal_message
 
 connections = {}
 
@@ -38,10 +38,15 @@ class ConnectHandler(tornado.websocket.WebSocketHandler):
 
         logging.info(f"Connected to room: {self.room_id}")
 
+        # if there is an offer, send it to the client
+        offer = await self.redis.get(f"{self.room_id}:offer")
+        if offer:
+            self.send_message_to_room(self.room_id, offer)
+
     def open(self):
         tornado.ioloop.IOLoop.current().add_callback(self.async_open)
 
-    async def on_message(self, message):
+    async def on_message(self, message:Message):
         if not self.room_id:
             return
 
@@ -56,14 +61,25 @@ class ConnectHandler(tornado.websocket.WebSocketHandler):
 
         # processes in any condition are the same but it should be changed if necessary.
         if message.type == MessageType.OFFER:
+            logging.info(f"Received offer: {message}")
             description = json.dumps(message.description)
             await self.redis.set(f"{self.room_id}:offer", description)
-            self.send_message_to_room(self.room_id, "your offer has been received :>")
         if message.type == MessageType.ANSWER:
-            self.send_message_to_room(self.room_id, "your answer has been received :>")
+            logging.info(f"Received answer: {message}")
+            await self.redis.set(f"{self.room_id}:answer", json.dumps(message.description))
+            self.send_message_to_room(self.room_id, message.description)
         if message.type == MessageType.CANDIDATE:
-            self.send_message_to_room(self.room_id, "your candidate has been received :>")
-
+            if (message.sendFrom == MessageFromType.HOST):
+                logging.info(f"Received candidate from HOST: {message}")
+                await self.redis.lpush(f"{self.room_id}:hostCandidates", message.marshal())
+            if (message.sendFrom == MessageFromType.CLIENT):
+                logging.info(f"Received candidate from CLIENT: {message}")
+                self.send_message_to_room(self.room_id, message.self_unmarshal())
+        if message.type == MessageType.JOIN:
+            logging.info(f"Received join: {message}")
+            candidates = await self.redis.lrange(f"{self.room_id}:hostCandidates", 0, -1)
+            for candidate in candidates:
+                self.send_message_to_room(self.room_id, candidate)
 
     def on_close(self):
         if self.room_id and self in connections.get(self.room_id, set()):
